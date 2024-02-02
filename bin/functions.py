@@ -127,6 +127,16 @@ def multiply_equals_test(permutations: list, alpha: float = 0.05, method: str = 
         permutations(list): vector with a number of permutations of different types
         alpha(float): overall significance level
         method(str): method to multipletest
+            bonferroni : one-step correctio
+            sidak : one-step correction
+            holm-sidak : step down method using Sidak adjustments
+            holm : step-down method using Bonferroni adjustments
+            simes-hochberg : step-up method (independent)
+            hommel : closed method based on Simes tests (non-negative)
+            fdr_bh : Benjamini/Hochberg (non-negative)
+            fdr_by : Benjamini/Yekutieli (negative)
+            fdr_tsbh : two stage fdr correction (non-negative)
+            fdr_tsbky : two stage fdr correction (non-negative)
     Returns:
         list of bool(true for hypothesis that can be rejected for given alpha), p-values corrected for multiple tests, corrected alpha for Sidak method, corrected alpha for Bonferroni method
     """
