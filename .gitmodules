@@ -1,0 +1,3 @@
+[submodule "src/M4-methods"]
+	path = src/M4-methods
+	url = https://github.com/Mcompetitions/M4-methods/

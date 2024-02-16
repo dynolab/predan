@@ -4,6 +4,7 @@ import statsmodels.api as sm
 import datetime as dt
 import itertools as it
 import scipy as sp
+from itertools import combinations
 
 
 def generate_ts(date_start: str = "29/06/2023 00:00:00", date_end: str = "30/07/2023 00:00:00", alpha: float = 0.6,
@@ -97,6 +98,29 @@ def entropy(permutations: list):
         if probability != 0:
             ent -= probability * np.log2(probability)
     return ent
+
+
+def sample_entropy(timeseries_data: list, window_size: int, r: float):
+    """
+    Count sample entropy of time series.
+    :param timeseries_data: time series
+    :param window_size: window for walking through a time series
+    :param r: tolerance interval
+    :return: sample entropy
+    """
+    def construct_templates(ts_data: list, m: int = 2):
+        num_windows = len(ts_data) - m + 1
+        return [ts_data[x:x + m] for x in range(0, num_windows)]
+
+    def is_match(template_1: list, template_2: list, r1: float):
+        return all([abs(x - y) < r1 for (x, y) in zip(template_1, template_2)])
+
+    def get_matches(templates: list, r1: float):
+        return len(list(filter(lambda x: is_match(x[0], x[1], r1), it.combinations(templates, 2))))
+
+    B = get_matches(construct_templates(timeseries_data, window_size), r)
+    A = get_matches(construct_templates(timeseries_data, window_size + 1), r)
+    return -np.log2(A / B)
 
 
 def equals_test(n1: int, n2: int, n: int):
