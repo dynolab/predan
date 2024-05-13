@@ -5,7 +5,7 @@ import datetime as dt
 import itertools as it
 import scipy as sp
 from itertools import combinations
-
+from statsmodels.tsa.arima.model import ARIMA
 from sklearn.model_selection import train_test_split
 
 
@@ -283,12 +283,48 @@ def generate_trend_series(length=250, trend_koef=2, ampl=10, seasonality_period=
         error = np.random.normal(loc=0, scale=sigma, size=len(stationary_series))
 
         # Combine all components
-        series_with_trend_seasonality_error = stationary_series + trend * trend_koef + seasonality + error
+        series_with_trend_seasonality = stationary_series + trend * trend_koef + seasonality
+        series_with_trend_seasonality_error = series_with_trend_seasonality + error
 
-        return series_with_trend_seasonality_error
+        return series_with_trend_seasonality, series_with_trend_seasonality_error
 
     x = np.linspace(0, 2 * np.pi, length)
     series = ampl * np.sin(x)
-    new_series = add_components(series, seasonality_period=seasonality_period,
+    new_series, new_series_with_error = add_components(series, seasonality_period=seasonality_period,
                                 seasonality_aplitude=seasonality_aplitude, sigma=sigma, trend_koef=trend_koef)
-    return new_series
+    return new_series, new_series_with_error
+
+def arima_forecast(data, p, d, q, number_of_steps):
+    model = ARIMA(data, order=(p, d, q))
+    fitted_model = model.fit()
+    forecasts = fitted_model.forecast(steps=number_of_steps)
+    return forecasts
+
+def ar2_forecast(data, number_of_steps):
+    return arima_forecast(data, 2, 0, 0, number_of_steps)
+
+def arma_forecast(data, number_of_steps):
+    return arima_forecast(data, 10, 0, 5, number_of_steps)
+def naive_forecast(data, number_of_steps):
+    last_observation = data[-1]
+    index = np.arange(data.shape[0], data.shape[0] + number_of_steps)
+    forecast = pd.Series(last_observation, index=index)
+    return forecast
+
+def mean_absolute_scaled_error(insample, y_test, y_hat_test, freq):
+    """
+    Calculates MAsE
+
+    :param insample: insample data
+    :param y_test: out of sample target values
+    :param y_hat_test: predicted values
+    :param freq: data frequency
+    :return:
+    """
+    y_hat_naive = []
+    for i in range(freq, len(insample)):
+        y_hat_naive.append(insample[(i - freq)])
+
+    masep = np.mean(abs(insample[freq:] - y_hat_naive))
+
+    return np.mean(abs(y_test - y_hat_test)) / masep
