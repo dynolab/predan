@@ -194,18 +194,19 @@ def generate_arma(p, q, n):
     return time_series
 
 
-def generate_rw(n):
+def generate_rw(n, noise_variance=1.0):
     """
     Генерация случайного блуждания.
 
     Параметры:
     - n: int, количество точек в ряду
+    - noise_variance: float, дисперсия шума
 
     Возвращает:
     - временной ряд
     """
-    # Генерация случайного шума
-    noise = np.random.randn(n)
+    # Генерация случайного шума с заданной дисперсией
+    noise = np.random.normal(0, np.sqrt(noise_variance), size=n)
 
     # Создание временного ряда из случайного шума
     time_series = np.cumsum(noise)
@@ -328,3 +329,15 @@ def mean_absolute_scaled_error(insample, y_test, y_hat_test, freq):
     masep = np.mean(abs(insample[freq:] - y_hat_naive))
 
     return np.mean(abs(y_test - y_hat_test)) / masep
+
+def symmetric_mean_absolute_percentage_error(a, b):
+    """
+    Calculates sMAPE
+
+    :param a: actual values
+    :param b: predicted values
+    :return: sMAPE
+    """
+    a = np.reshape(a, (-1,))
+    b = np.reshape(b, (-1,))
+    return np.mean(2.0 * np.abs(a - b) / (np.abs(a) + np.abs(b))).item()
