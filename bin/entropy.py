@@ -112,7 +112,7 @@ def permutation_stationary_entropy(time_series: pd.Series, window: int) -> float
     return ent_rate
 
 
-def permutation_entropy_rate(time_series: pd.Series, window: int, num_transitions: int = 1) -> float:
+def permutation_entropy_rate(time_series: pd.Series, window: int, num_transitions: int = 0) -> float:
     permutation = permutation_series(time_series, window)
     transition_matrix = compute_transition_matrix(permutation)
 

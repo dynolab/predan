@@ -9,19 +9,16 @@ def compute_transition_matrix(sequence: pd.Series) -> np.ndarray:
     :param sequence(pd.Series): series of permutations
     :return: transition matrix(np.ndarray)
     """
-    # Создаем словарь для хранения количества переходов между состояниями
     states = sequence.unique()
+    states.sort()
     transitions = defaultdict(lambda: defaultdict(int))
 
-    # Считаем количество переходов между состояниями
     for i in range(len(sequence) - 1):
         current_state = sequence[i]
         next_state = sequence[i + 1]
         transitions[current_state][next_state] += 1
 
-    # Создаем пустую матрицу переходных вероятностей
     transition_matrix = np.zeros((len(states), len(states)))
-    # Вычисляем вероятности переходов и заполняем матрицу
     for i, state in enumerate(states):
         total_transitions = sum(transitions[state].values())
         # Заполню одинаковыми значениями
