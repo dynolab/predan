@@ -59,3 +59,66 @@ def permutation_series(ts: pd.Series, window: int) -> pd.Series:
             slice_df[slice_df[slice_df == sort_slice.iloc[j]].first_valid_index()] = j
         pseries.append(permutation_list.index(tuple(slice_df.tolist())))
     return pd.Series(pseries)
+
+def count_shapes(ts: pd.Series, window: int) -> list:
+    """
+    Count shapes in time series
+    Parameters:
+        ts(pd.Series): time series
+        window(int): window for walking through a time series for which the type of shape is located
+    Returns:
+        frequencies(list): vector with a number of shape of different types.
+    """
+    if len(ts) < window:
+        return [0] * (2 ** (window - 1))
+
+    real_ts = remove_consecutive_duplicates(ts.copy()).to_numpy()
+    shape_frequencies = {}
+
+    for i in range(len(real_ts) - window + 1):
+        vec = real_ts[i:i + window]
+        shape = ''.join(['1' if vec[j + 1] > vec[j] else '0' for j in range(window - 1)])
+        if shape in shape_frequencies:
+            shape_frequencies[shape] += 1
+        else:
+            shape_frequencies[shape] = 1
+
+    all_shapes = [''.join(seq) for seq in it.product('01', repeat=window - 1)]
+    frequencies = [shape_frequencies.get(shape, 0) for shape in all_shapes]
+
+    return frequencies
+
+
+def shape_series(ts: pd.Series, window: int) -> pd.Series:
+    """
+        Calculation of a series of shapes
+        Parameters:
+            ts(pd.Series): time series
+            window(int): window for walking through a time series for which the type of shape is located
+        Returns:
+            numbered_forms_sequence(pd.Series): Series of shapes
+        """
+    real_ts = remove_consecutive_duplicates(ts.copy()).to_numpy()
+    if len(real_ts) < window:
+        return pd.Series([])
+
+    all_shapes = [''.join(seq) for seq in it.product('01', repeat=window - 1)]
+
+    # Создаем Series, где индексами будут формы, а значениями их номера
+    shape_series = pd.Series(data=range(len(all_shapes)), index=all_shapes)
+
+    # Список для хранения номеров форм
+    numbered_forms_sequence = []
+
+    # Проходим по временному ряду окном размера d
+    for i in range(len(real_ts) - window + 1):
+        # Извлекаем текущее окно
+        vec = real_ts[i:i + window]
+
+        # Формируем форму текущего окна
+        shape = ''.join(['1' if vec[j + 1] > vec[j] else '0' for j in range(window - 1)])
+
+        # Получаем номер формы и добавляем в последовательность
+        numbered_forms_sequence.append(shape_series[shape])
+
+    return pd.Series(numbered_forms_sequence)

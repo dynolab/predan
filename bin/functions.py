@@ -3,7 +3,6 @@ import numpy as np
 import statsmodels.api as sm
 import datetime as dt
 import itertools as it
-import scipy as sp
 from itertools import combinations
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.model_selection import train_test_split
@@ -63,55 +62,6 @@ def random_walk(date_start: str = "29/06/2023 00:00:00", date_end: str = "30/07/
         for i in time_series[1:]:
             time_series[i] = time_series[i - dt.timedelta(1 / 24)] + np.random.uniform(-noise, noise)
     return time_series
-
-
-def equals_test(n1: int, n2: int, n: int):
-    """
-    Test of two value of permutations equally likely
-    Parameters:
-        n1(int): number of objects with the first property
-        n2(int): number of objects with the second property
-        n(int): number of all objects in sample
-    Returns:
-        z, p_value((float,float)): statistics and p_value of test
-    """
-    w1 = n1 / n
-    w2 = n2 / n
-    p = (n1 + n2) / (2 * n)
-    z = 0
-    if p != 0 and p != 1:
-        z = (w1 - w2) / (p * (1 - p) * (2 / n)) ** 0.5
-    mod_z = abs(z)
-    p_value = 2 * (1 - sp.stats.norm.cdf(mod_z))
-    return z, p_value
-
-
-def multiply_equals_test(permutations: list, alpha: float = 0.05, method: str = "hs"):
-    """
-    Symmetry category test with multiple hypothesis of equals tests
-    Parameters:
-        permutations(list): vector with a number of permutations of different types
-        alpha(float): overall significance level
-        method(str): method to multipletest
-            bonferroni : one-step correctio
-            sidak : one-step correction
-            holm-sidak : step down method using Sidak adjustments
-            holm : step-down method using Bonferroni adjustments
-            simes-hochberg : step-up method (independent)
-            hommel : closed method based on Simes tests (non-negative)
-            fdr_bh : Benjamini/Hochberg (non-negative)
-            fdr_by : Benjamini/Yekutieli (negative)
-            fdr_tsbh : two stage fdr correction (non-negative)
-            fdr_tsbky : two stage fdr correction (non-negative)
-    Returns:
-        list of bool(true for hypothesis that can be rejected for given alpha), p-values corrected for multiple tests, corrected alpha for Sidak method, corrected alpha for Bonferroni method
-    """
-    p_list = []
-    for pair_index in range(len(permutations) // 2):
-        statistic, p_value = equals_test(permutations[pair_index], permutations[-1 - pair_index],
-                                         sum(permutations))
-        p_list.append(p_value)
-    return sm.stats.multipletests(p_list, alpha, method)
 
 
 def big_split(sym_test: str, columns: list or None = None, test_size: float = 0.05, random_state: int = 42):
@@ -292,8 +242,10 @@ def generate_trend_series(length=250, trend_koef=2, ampl=10, seasonality_period=
     x = np.linspace(0, 2 * np.pi, length)
     series = ampl * np.sin(x)
     new_series, new_series_with_error = add_components(series, seasonality_period=seasonality_period,
-                                seasonality_aplitude=seasonality_aplitude, sigma=sigma, trend_koef=trend_koef)
+                                                       seasonality_aplitude=seasonality_aplitude, sigma=sigma,
+                                                       trend_koef=trend_koef)
     return new_series, new_series_with_error
+
 
 def arima_forecast(data, p, d, q, number_of_steps):
     model = ARIMA(data, order=(p, d, q))
@@ -301,16 +253,21 @@ def arima_forecast(data, p, d, q, number_of_steps):
     forecasts = fitted_model.forecast(steps=number_of_steps)
     return forecasts
 
+
 def ar2_forecast(data, number_of_steps):
     return arima_forecast(data, 2, 0, 0, number_of_steps)
 
+
 def arma_forecast(data, number_of_steps):
     return arima_forecast(data, 10, 0, 5, number_of_steps)
+
+
 def naive_forecast(data, number_of_steps):
     last_observation = data[-1]
     index = np.arange(data.shape[0], data.shape[0] + number_of_steps)
     forecast = pd.Series(last_observation, index=index)
     return forecast
+
 
 def mean_absolute_scaled_error(insample, y_test, y_hat_test, freq):
     """
@@ -329,6 +286,7 @@ def mean_absolute_scaled_error(insample, y_test, y_hat_test, freq):
     masep = np.mean(abs(insample[freq:] - y_hat_naive))
 
     return np.mean(abs(y_test - y_hat_test)) / masep
+
 
 def symmetric_mean_absolute_percentage_error(a, b):
     """
